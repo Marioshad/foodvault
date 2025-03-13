@@ -7,6 +7,7 @@ import {
   MapPin,
   ShoppingCart,
   LogOut,
+  BarChart2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -34,6 +35,11 @@ export function SidebarNav() {
       title: "Shopping List",
       href: "/shopping",
       icon: ShoppingCart,
+    },
+    {
+      title: "Analytics",
+      href: "/analytics",
+      icon: BarChart2,
     },
   ];
 
