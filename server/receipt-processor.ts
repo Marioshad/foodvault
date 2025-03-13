@@ -25,17 +25,21 @@ export async function processReceipt(imageBuffer: Buffer): Promise<ProcessedRece
     model: "gpt-4o",
     messages: [
       {
+        role: "system",
+        content: "You are a receipt analysis expert. Extract detailed information from receipt images in a structured format. Be precise with numbers and confident in your analysis."
+      },
+      {
         role: "user",
         content: [
           {
             type: "text",
-            text: "This is a receipt image. Please analyze it and extract the following information in a structured format:\n" +
-                  "1. List of items with their names, prices (in cents), quantities, and your confidence level (0-1)\n" +
-                  "2. Language of the receipt\n" +
-                  "3. Total amount\n" +
-                  "4. Store name if visible\n" +
-                  "5. Receipt date if visible\n" +
-                  "Return the data in a consistent format that can be parsed."
+            text: "Please analyze this receipt image and extract the following information in JSON format:\n" +
+                  "- items: array of items with name, price (in cents), quantity, and confidence level (0-1)\n" +
+                  "- language: detected language of the receipt\n" +
+                  "- totalAmount: total amount in cents\n" +
+                  "- date: receipt date if visible (ISO format)\n" +
+                  "- storeName: name of the store if visible\n\n" +
+                  "Ensure all numerical values are in their smallest unit (cents for currency)."
           },
           {
             type: "image_url",
@@ -46,7 +50,8 @@ export async function processReceipt(imageBuffer: Buffer): Promise<ProcessedRece
         ]
       }
     ],
-    max_tokens: 1000,
+    response_format: { type: "json_object" },
+    max_tokens: 1500,
   });
 
   const content = response.choices[0].message.content;
@@ -55,49 +60,24 @@ export async function processReceipt(imageBuffer: Buffer): Promise<ProcessedRece
   }
 
   try {
-    // Parse the AI response
-    // Using a simple format parsing approach - could be enhanced with more robust parsing
-    const lines = content.split('\n');
-    const items: ProcessedReceipt['items'] = [];
-    let language = 'en';
-    let totalAmount = 0;
-    let storeName: string | undefined;
-    let date: string | undefined;
+    // Parse the JSON response directly since we specified json_object format
+    const parsedData = JSON.parse(content);
 
-    for (const line of lines) {
-      if (line.toLowerCase().includes('item:')) {
-        const itemMatch = line.match(/Item:\s*(.+?)\s*,\s*Price:\s*(\d+)\s*,\s*Quantity:\s*(\d+)\s*,\s*Confidence:\s*([\d.]+)/i);
-        if (itemMatch) {
-          items.push({
-            name: itemMatch[1],
-            price: parseInt(itemMatch[2]),
-            quantity: parseInt(itemMatch[3]),
-            confidence: parseFloat(itemMatch[4])
-          });
-        }
-      } else if (line.toLowerCase().includes('language:')) {
-        language = line.split(':')[1].trim().toLowerCase();
-      } else if (line.toLowerCase().includes('total:')) {
-        const totalMatch = line.match(/\d+/);
-        if (totalMatch) {
-          totalAmount = parseInt(totalMatch[0]);
-        }
-      } else if (line.toLowerCase().includes('store:')) {
-        storeName = line.split(':')[1].trim();
-      } else if (line.toLowerCase().includes('date:')) {
-        date = line.split(':')[1].trim();
-      }
-    }
-
+    // Ensure the response matches our expected format
     return {
-      items,
-      language,
-      totalAmount,
-      storeName,
-      date
+      items: parsedData.items.map((item: any) => ({
+        name: item.name,
+        price: Math.round(item.price), // Ensure price is an integer
+        quantity: Math.round(item.quantity), // Ensure quantity is an integer
+        confidence: Math.min(1, Math.max(0, item.confidence)), // Ensure confidence is between 0 and 1
+      })),
+      language: parsedData.language?.toLowerCase() || 'en',
+      totalAmount: Math.round(parsedData.totalAmount),
+      date: parsedData.date,
+      storeName: parsedData.storeName,
     };
   } catch (error) {
-    console.error('Error parsing OpenAI response:', error);
+    console.error('Error parsing OpenAI response:', error, 'Raw response:', content);
     throw new Error('Failed to parse receipt data');
   }
 }
