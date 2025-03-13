@@ -3,14 +3,51 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertLocationSchema, insertFoodItemSchema } from "@shared/schema";
+import multer from "multer";
 
 function ensureAuthenticated(req: any, res: any, next: any) {
   if (req.isAuthenticated()) return next();
   res.sendStatus(401);
 }
 
+// Configure multer for handling file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Receipt upload route
+  app.post(
+    "/api/receipts/upload",
+    ensureAuthenticated,
+    upload.single("receipt"),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        // For now, just return a mock response
+        // Later we'll integrate with OpenAI Vision API
+        res.json({
+          items: [
+            {
+              name: "Sample Item",
+              price: 1099,
+              quantity: 1,
+            },
+          ],
+        });
+      } catch (error: any) {
+        res.status(500).json({ message: error.message });
+      }
+    },
+  );
 
   // Location routes
   app.get("/api/locations", ensureAuthenticated, async (req, res) => {
