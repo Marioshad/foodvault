@@ -2,20 +2,31 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Loader2, Check } from "lucide-react";
+import { Upload, Loader2, Check, AlertCircle } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 type DetectedItem = {
   name: string;
   price: number;
   quantity: number;
+  confidence: number;
+};
+
+type ProcessedReceipt = {
+  items: DetectedItem[];
+  language: string;
+  totalAmount: number;
+  date?: string;
+  storeName?: string;
 };
 
 export function ReceiptUpload() {
   const [preview, setPreview] = useState<string | null>(null);
-  const [detectedItems, setDetectedItems] = useState<DetectedItem[]>([]);
+  const [receiptData, setReceiptData] = useState<ProcessedReceipt | null>(null);
   const { toast } = useToast();
 
   const uploadMutation = useMutation({
@@ -37,11 +48,11 @@ export function ReceiptUpload() {
 
       return await res.json();
     },
-    onSuccess: (data) => {
-      setDetectedItems(data.items);
+    onSuccess: (data: ProcessedReceipt) => {
+      setReceiptData(data);
       toast({
         title: "Receipt processed",
-        description: `Found ${data.items.length} items in the receipt`,
+        description: `Found ${data.items.length} items from ${data.storeName || 'receipt'}`,
       });
     },
     onError: (error: Error) => {
@@ -108,19 +119,47 @@ export function ReceiptUpload() {
             </div>
           )}
 
-          {detectedItems.length > 0 && (
+          {receiptData && (
             <div className="w-full space-y-4">
-              <h3 className="font-medium">Detected Items</h3>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">Receipt Details</h3>
+                  <Badge>{receiptData.language.toUpperCase()}</Badge>
+                </div>
+                {receiptData.storeName && (
+                  <p className="text-sm text-muted-foreground">
+                    Store: {receiptData.storeName}
+                  </p>
+                )}
+                {receiptData.date && (
+                  <p className="text-sm text-muted-foreground">
+                    Date: {format(new Date(receiptData.date), "PPP")}
+                  </p>
+                )}
+                <p className="text-sm font-medium">
+                  Total: ${(receiptData.totalAmount / 100).toFixed(2)}
+                </p>
+              </div>
+
               <div className="space-y-2">
-                {detectedItems.map((item, index) => (
+                <h3 className="font-medium">Detected Items</h3>
+                {receiptData.items.map((item, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
-                    <div>
-                      <p className="font-medium">{item.name}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{item.name}</p>
+                        {item.confidence < 0.7 && (
+                          <AlertCircle className="h-4 w-4 text-yellow-500" />
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         ${(item.price / 100).toFixed(2)} • Qty: {item.quantity}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Confidence: {Math.round(item.confidence * 100)}%
                       </p>
                     </div>
                     <Button variant="outline" size="icon">
@@ -129,6 +168,7 @@ export function ReceiptUpload() {
                   </div>
                 ))}
               </div>
+
               <Button className="w-full" disabled={uploadMutation.isPending}>
                 Add Selected Items to Inventory
               </Button>

@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertLocationSchema, insertFoodItemSchema } from "@shared/schema";
 import multer from "multer";
+import { processReceipt } from "./receipt-processor";
 
 function ensureAuthenticated(req: any, res: any, next: any) {
   if (req.isAuthenticated()) return next();
@@ -32,18 +33,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "No file uploaded" });
         }
 
-        // For now, just return a mock response
-        // Later we'll integrate with OpenAI Vision API
-        res.json({
-          items: [
-            {
-              name: "Sample Item",
-              price: 1099,
-              quantity: 1,
-            },
-          ],
-        });
+        const result = await processReceipt(req.file.buffer);
+        res.json(result);
       } catch (error: any) {
+        console.error('Receipt processing error:', error);
         res.status(500).json({ message: error.message });
       }
     },
