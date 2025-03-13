@@ -14,17 +14,17 @@ import Shopping from "@/pages/shopping";
 function Router() {
   return (
     <Switch>
+      <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/inventory" component={Inventory} />
       <ProtectedRoute path="/locations" component={Locations} />
       <ProtectedRoute path="/shopping" component={Shopping} />
-      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -34,5 +34,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;
