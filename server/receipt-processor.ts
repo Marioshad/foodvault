@@ -21,7 +21,7 @@ export async function processReceipt(imageBuffer: Buffer): Promise<ProcessedRece
   const base64Image = imageBuffer.toString('base64');
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4-vision-preview-1106",
+    model: "gpt-4-vision-preview",
     messages: [
       {
         role: "user",
