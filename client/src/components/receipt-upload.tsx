@@ -15,13 +15,25 @@ export function ReceiptUpload() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("receipt", file);
-      const res = await apiRequest("POST", "/api/receipts/upload", formData);
+
+      // Don't use apiRequest here as it sets Content-Type which breaks multipart/form-data
+      const res = await fetch("/api/receipts/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
+
       return await res.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Receipt processed",
-        description: "Found items: " + data.items.length,
+        description: `Found ${data.items.length} items in the receipt`,
       });
     },
     onError: (error: Error) => {
@@ -65,6 +77,7 @@ export function ReceiptUpload() {
                 id="receipt"
                 type="file"
                 accept="image/*"
+                capture="environment"
                 className="hidden"
                 onChange={handleFileChange}
                 disabled={uploadMutation.isPending}
