@@ -18,12 +18,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FoodItemForm } from "@/components/food-item-form";
 import { format } from "date-fns";
-import { Plus, MoreVertical, Search } from "lucide-react";
+import { Plus, MoreVertical, Search, Upload } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ReceiptUpload } from "@/components/receipt-upload";
 
 export default function Inventory() {
   const [search, setSearch] = useState("");
@@ -65,17 +66,36 @@ export default function Inventory() {
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Inventory</h1>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <FoodItemForm />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Scan Receipt
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-xl">
+                <DialogHeader>
+                  <DialogTitle>Upload Receipt</DialogTitle>
+                  <DialogDescription>
+                    Take a photo of your receipt to automatically add items to your inventory
+                  </DialogDescription>
+                </DialogHeader>
+                <ReceiptUpload />
+              </DialogContent>
+            </Dialog>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Item
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <FoodItemForm />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="flex items-center mb-6">
