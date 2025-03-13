@@ -5,15 +5,21 @@ import {
   type InsertUser,
   type InsertLocation,
   type InsertFoodItem,
+  users,
+  locations,
+  foodItems,
 } from "@shared/schema";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
-  sessionStore: session.SessionStore;
-  
+  sessionStore: session.Store;
+
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -34,62 +40,58 @@ export interface IStorage {
   deleteFoodItem(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private locations: Map<number, Location>;
-  private foodItems: Map<number, FoodItem>;
-  sessionStore: session.SessionStore;
-  private userId: number;
-  private locationId: number;
-  private foodItemId: number;
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.locations = new Map();
-    this.foodItems = new Map();
-    this.userId = 1;
-    this.locationId = 1;
-    this.foodItemId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
     });
   }
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
+    return user;
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const newUser = { ...user, id };
-    this.users.set(id, newUser);
+    const [newUser] = await db.insert(users).values(user).returning();
     return newUser;
   }
 
   // Location operations
   async getLocations(userId: number): Promise<Location[]> {
-    return Array.from(this.locations.values()).filter(
-      (location) => location.userId === userId,
-    );
+    return await db
+      .select()
+      .from(locations)
+      .where(eq(locations.userId, userId));
   }
 
   async getLocation(id: number): Promise<Location | undefined> {
-    return this.locations.get(id);
+    const [location] = await db
+      .select()
+      .from(locations)
+      .where(eq(locations.id, id));
+    return location;
   }
 
   async createLocation(
     location: InsertLocation & { userId: number },
   ): Promise<Location> {
-    const id = this.locationId++;
-    const newLocation = { ...location, id };
-    this.locations.set(id, newLocation);
+    const [newLocation] = await db
+      .insert(locations)
+      .values(location)
+      .returning();
     return newLocation;
   }
 
@@ -97,34 +99,41 @@ export class MemStorage implements IStorage {
     id: number,
     location: Partial<InsertLocation>,
   ): Promise<Location> {
-    const existing = this.locations.get(id);
-    if (!existing) throw new Error("Location not found");
-    const updated = { ...existing, ...location };
-    this.locations.set(id, updated);
-    return updated;
+    const [updatedLocation] = await db
+      .update(locations)
+      .set(location)
+      .where(eq(locations.id, id))
+      .returning();
+    return updatedLocation;
   }
 
   async deleteLocation(id: number): Promise<void> {
-    this.locations.delete(id);
+    await db.delete(locations).where(eq(locations.id, id));
   }
 
   // Food item operations
   async getFoodItems(userId: number): Promise<FoodItem[]> {
-    return Array.from(this.foodItems.values()).filter(
-      (item) => item.userId === userId,
-    );
+    return await db
+      .select()
+      .from(foodItems)
+      .where(eq(foodItems.userId, userId));
   }
 
   async getFoodItem(id: number): Promise<FoodItem | undefined> {
-    return this.foodItems.get(id);
+    const [item] = await db
+      .select()
+      .from(foodItems)
+      .where(eq(foodItems.id, id));
+    return item;
   }
 
   async createFoodItem(
     item: InsertFoodItem & { userId: number },
   ): Promise<FoodItem> {
-    const id = this.foodItemId++;
-    const newItem = { ...item, id, purchased: new Date() };
-    this.foodItems.set(id, newItem);
+    const [newItem] = await db
+      .insert(foodItems)
+      .values({ ...item, purchased: new Date() })
+      .returning();
     return newItem;
   }
 
@@ -132,16 +141,17 @@ export class MemStorage implements IStorage {
     id: number,
     item: Partial<InsertFoodItem>,
   ): Promise<FoodItem> {
-    const existing = this.foodItems.get(id);
-    if (!existing) throw new Error("Food item not found");
-    const updated = { ...existing, ...item };
-    this.foodItems.set(id, updated);
-    return updated;
+    const [updatedItem] = await db
+      .update(foodItems)
+      .set(item)
+      .where(eq(foodItems.id, id))
+      .returning();
+    return updatedItem;
   }
 
   async deleteFoodItem(id: number): Promise<void> {
-    this.foodItems.delete(id);
+    await db.delete(foodItems).where(eq(foodItems.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
