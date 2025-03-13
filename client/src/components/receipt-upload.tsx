@@ -8,6 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type DetectedItem = {
   name: string;
@@ -27,6 +28,7 @@ type ProcessedReceipt = {
 export function ReceiptUpload() {
   const [preview, setPreview] = useState<string | null>(null);
   const [receiptData, setReceiptData] = useState<ProcessedReceipt | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   const uploadMutation = useMutation({
@@ -64,6 +66,32 @@ export function ReceiptUpload() {
     },
   });
 
+  const addToInventoryMutation = useMutation({
+    mutationFn: async (items: DetectedItem[]) => {
+      const promises = items.map(item => 
+        apiRequest("POST", "/api/food-items", {
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          unit: "pieces", // Default unit
+          expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // Default 7 days
+          locationId: 1, // Default location
+        })
+      );
+      await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/food-items"] });
+      toast({
+        title: "Items added",
+        description: "Selected items have been added to your inventory",
+      });
+      setReceiptData(null);
+      setPreview(null);
+      setSelectedItems(new Set());
+    },
+  });
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -76,6 +104,35 @@ export function ReceiptUpload() {
 
       // Upload file
       uploadMutation.mutate(file);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (receiptData) {
+      if (selectedItems.size === receiptData.items.length) {
+        setSelectedItems(new Set());
+      } else {
+        setSelectedItems(new Set(receiptData.items.map((_, index) => index)));
+      }
+    }
+  };
+
+  const toggleItem = (index: number) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const handleAddToInventory = () => {
+    if (receiptData) {
+      const selectedItemsArray = Array.from(selectedItems).map(
+        index => receiptData.items[index]
+      );
+      addToInventoryMutation.mutate(selectedItemsArray);
     }
   };
 
@@ -142,35 +199,54 @@ export function ReceiptUpload() {
               </div>
 
               <div className="space-y-2">
-                <h3 className="font-medium">Detected Items</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">Detected Items</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAll}
+                  >
+                    {selectedItems.size === receiptData.items.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </Button>
+                </div>
                 {receiptData.items.map((item, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{item.name}</p>
-                        {item.confidence < 0.7 && (
-                          <AlertCircle className="h-4 w-4 text-yellow-500" />
-                        )}
+                    <div className="flex items-center gap-4 flex-1">
+                      <Checkbox
+                        checked={selectedItems.has(index)}
+                        onCheckedChange={() => toggleItem(index)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{item.name}</p>
+                          {item.confidence < 0.7 && (
+                            <AlertCircle className="h-4 w-4 text-yellow-500" />
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          ${(item.price / 100).toFixed(2)} • Qty: {item.quantity}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Confidence: {Math.round(item.confidence * 100)}%
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        ${(item.price / 100).toFixed(2)} • Qty: {item.quantity}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Confidence: {Math.round(item.confidence * 100)}%
-                      </p>
                     </div>
-                    <Button variant="outline" size="icon">
-                      <Check className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
               </div>
 
-              <Button className="w-full" disabled={uploadMutation.isPending}>
-                Add Selected Items to Inventory
+              <Button 
+                className="w-full" 
+                disabled={uploadMutation.isPending || selectedItems.size === 0}
+                onClick={handleAddToInventory}
+              >
+                Add {selectedItems.size} Items to Inventory
               </Button>
             </div>
           )}
