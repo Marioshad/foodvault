@@ -132,7 +132,11 @@ export class DatabaseStorage implements IStorage {
   ): Promise<FoodItem> {
     const [newItem] = await db
       .insert(foodItems)
-      .values({ ...item, purchased: new Date() })
+      .values({
+        ...item,
+        purchased: new Date().toISOString(),
+        expiryDate: item.expiryDate.toISOString(),
+      })
       .returning();
     return newItem;
   }
@@ -143,7 +147,10 @@ export class DatabaseStorage implements IStorage {
   ): Promise<FoodItem> {
     const [updatedItem] = await db
       .update(foodItems)
-      .set(item)
+      .set({
+        ...item,
+        expiryDate: item.expiryDate?.toISOString(),
+      })
       .where(eq(foodItems.id, id))
       .returning();
     return updatedItem;
