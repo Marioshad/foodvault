@@ -70,7 +70,7 @@ export function ReceiptUpload() {
 
   return (
     <Card className="w-full">
-      <CardContent className="pt-6">
+      <CardContent className="pt-6 max-h-[80vh] overflow-y-auto">
         <div className="flex flex-col items-center gap-4">
           <label
             htmlFor="receipt"
