@@ -61,13 +61,13 @@ export default function Analytics() {
     items: foodItems?.filter((item) => item.locationId === location.id).length || 0,
     value: foodItems
       ?.filter((item) => item.locationId === location.id)
-      .reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0),
+      .reduce((sum, item) => sum + ((item.price || 0) * item.quantity) / 100, 0), // Convert to dollars
   }));
 
   // Cost distribution by item type (using name as a proxy for type)
   const costDistribution = foodItems
     ?.reduce((acc, item) => {
-      const value = (item.price || 0) * item.quantity;
+      const value = ((item.price || 0) * item.quantity) / 100; // Convert to dollars
       if (value > 0) {
         acc.push({
           name: item.name,
@@ -86,7 +86,7 @@ export default function Analytics() {
       <SidebarNav />
       <div className="flex-1 p-8">
         <h1 className="text-3xl font-bold mb-8">Analytics & Reports</h1>
-        
+
         <div className="grid gap-6 md:grid-cols-2">
           {/* Total Value Card */}
           <Card>
@@ -138,7 +138,12 @@ export default function Analytics() {
                     <XAxis dataKey="name" />
                     <YAxis yAxisId="left" orientation="left" stroke="#82ca9d" />
                     <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value: any, name: string) => {
+                        if (name === "value") return [`$${Number(value).toFixed(2)}`, "Value"];
+                        return [value, name];
+                      }}
+                    />
                     <Bar yAxisId="left" dataKey="items" fill="#82ca9d" name="Items" />
                     <Bar
                       yAxisId="right"
@@ -170,7 +175,7 @@ export default function Analytics() {
                       cy="50%"
                       outerRadius={100}
                       label={({ name, value }) => 
-                        `${name} ($${(value / 100).toFixed(2)})`
+                        `${name} ($${value.toFixed(2)})`
                       }
                     >
                       {costDistribution?.map((_, index) => (
@@ -178,7 +183,7 @@ export default function Analytics() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number) => `$${(value / 100).toFixed(2)}`}
+                      formatter={(value: number) => `$${value.toFixed(2)}`}
                     />
                   </PieChart>
                 </ResponsiveContainer>
