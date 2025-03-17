@@ -1,0 +1,13 @@
+[phases.setup]
+nixPkgs = ["nodejs"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = [
+  "vite build"
+]
+
+[start]
+cmd = "NODE_ENV=production npm run preview"

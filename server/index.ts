@@ -3,10 +3,30 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { getDatabaseConnection } from "./db";
 import { users } from "@shared/schema";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure CORS for development
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:5173",  // Development
+  /\.replit\.app$/  // Production domains on Replit
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.some(allowed => 
+      typeof allowed === 'string' ? allowed === origin : allowed.test(origin)
+    )) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 // Add detailed request logging
 app.use((req, res, next) => {
@@ -94,10 +114,9 @@ app.use((req, res, next) => {
       });
     });
 
+    // In production, we don't need to serve static files since frontend is separate
     if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
-    } else {
-      serveStatic(app);
     }
 
     const port = process.env.PORT || 5000;

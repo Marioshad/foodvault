@@ -1,14 +1,12 @@
 [phases.setup]
-nixPkgs = ["nodejs", "postgresql"]
+nixPkgs = ["nodejs"]
 
 [phases.install]
 cmds = ["npm install"]
 
 [phases.build]
 cmds = [
-  "npm run build",
-  "esbuild server/index.ts --platform=node --packages=external --bundle --format=cjs --outdir=dist",
-  "chmod +x dist/index.js"
+  "esbuild server/index.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.js"
 ]
 
 [start]
