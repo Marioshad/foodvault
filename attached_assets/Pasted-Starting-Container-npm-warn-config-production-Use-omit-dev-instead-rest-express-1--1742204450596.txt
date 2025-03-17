@@ -1,0 +1,123 @@
+Starting Container
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+> rest-express@1.0.0 start
+
+> NODE_ENV=production node dist/index.js
+
+ 
+
+(node:15) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+9:37:55 AM [express] Failed to start server: getaddrinfo ENOTFOUND postgres.railway.internal
+
+9:37:55 AM [express] Stack trace: Error: getaddrinfo ENOTFOUND postgres.railway.internal
+
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+
+    at async file:///app/dist/index.js:513:5
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+> rest-express@1.0.0 start
+
+> NODE_ENV=production node dist/index.js
+
+ 
+
+(node:15) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+9:37:58 AM [express] Failed to start server: getaddrinfo ENOTFOUND postgres.railway.internal
+
+9:37:58 AM [express] Stack trace: Error: getaddrinfo ENOTFOUND postgres.railway.internal
+
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+
+    at async file:///app/dist/index.js:513:5
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+> rest-express@1.0.0 start
+
+> NODE_ENV=production node dist/index.js
+
+ 
+
+(node:15) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+9:38:02 AM [express] Stack trace: Error: getaddrinfo ENOTFOUND postgres.railway.internal
+
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+
+9:38:02 AM [express] Failed to start server: getaddrinfo ENOTFOUND postgres.railway.internal
+
+    at async file:///app/dist/index.js:513:5
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+> rest-express@1.0.0 start
+
+> NODE_ENV=production node dist/index.js
+
+ 
+
+(node:15) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+9:38:05 AM [express] Failed to start server: getaddrinfo ENOTFOUND postgres.railway.internal
+
+9:38:05 AM [express] Stack trace: Error: getaddrinfo ENOTFOUND postgres.railway.internal
+
+    at file:///app/node_modules/@neondatabase/serverless/index.mjs:1345:74
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+    at async NeonPreparedQuery.execute (file:///app/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+
+    at async file:///app/dist/index.js:513:5
+
+npm warn config production Use `--omit=dev` instead.
+
+ 
+
+> rest-express@1.0.0 start
+
+> NODE_ENV=production node dist/index.js
+
+ 
+
+(node:15) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+9:38:08 AM [express] Failed to start server: getaddrinfo ENOTFOUND postgres.railway.internal
+
+9:38:08 AM [express] Stack trace: Error: getaddrinfo ENOTFOUND postgres.railway.internal

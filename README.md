@@ -74,9 +74,25 @@ git push -u origin main
 
 1. In your Railway project, click "New Service" and select "Database"
 2. Choose "PostgreSQL"
-3. Railway will automatically create a new PostgreSQL database and provide the connection URL
-4. The `DATABASE_URL` will be automatically added to your environment variables
-5. The application uses Drizzle ORM which will automatically create the database schema on first deployment
+3. Once created, click on your PostgreSQL service
+4. Click "Connect" and copy the "Postgres Connection URL"
+5. In your main service's "Variables" tab, add:
+   ```
+   DATABASE_URL=<paste the copied PostgreSQL URL>
+   ```
+   Important: Make sure to use the external connection URL from the "Connect" tab, not the internal hostname.
+
+6. The application will automatically:
+   - Use SSL in production
+   - Handle connection pooling
+   - Create necessary database tables on first connection
+
+If you see database connection errors in Railway:
+1. Verify you're using the external connection URL from the PostgreSQL service's "Connect" tab
+2. Check that the URL is properly formatted: `postgresql://user:pass@hostname:port/dbname`
+3. Ensure the DATABASE_URL is correctly set in your main service's Variables tab
+4. Look for connection errors in the deployment logs
+
 
 ### 3. Environment Variables
 
@@ -86,7 +102,11 @@ In your Railway project, go to the "Variables" tab and add the following:
 - `SESSION_SECRET`: A random string for session encryption
 - `NODE_ENV`: Set to "production"
 
-The `DATABASE_URL` will be automatically set by Railway when you created the database.
+Important: Make sure `DATABASE_URL` is set and points to your Railway PostgreSQL instance.
+
+
+The application will use this URL to connect to your database automatically.
+
 
 ### 4. Deployment
 

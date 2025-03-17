@@ -6,28 +6,22 @@ import { log } from "./vite";
 
 neonConfig.webSocketConstructor = ws;
 
-// Enhanced environment variable check
+// Check for required environment variables
 if (!process.env.DATABASE_URL) {
-  log("Environment variables status:");
-  log(`DATABASE_URL: ${process.env.DATABASE_URL ? "Set" : "Not set"}`);
-  log(`PGHOST: ${process.env.PGHOST ? "Set" : "Not set"}`);
-  log(`PGPORT: ${process.env.PGPORT ? "Set" : "Not set"}`);
-  log(`PGUSER: ${process.env.PGUSER ? "Set" : "Not set"}`);
-  log(`PGDATABASE: ${process.env.PGDATABASE ? "Set" : "Not set"}`);
-
-  // Try to construct DATABASE_URL from individual components if available
-  if (process.env.PGHOST && process.env.PGPORT && process.env.PGUSER && 
-      process.env.PGPASSWORD && process.env.PGDATABASE) {
-    process.env.DATABASE_URL = `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
-    log("Constructed DATABASE_URL from individual components");
-  } else {
-    throw new Error(
-      "DATABASE_URL must be set. Did you forget to provision a database?",
-    );
-  }
+  log("Environment Error: DATABASE_URL is not set");
+  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// For security, log only that we have the connection URL, not the URL itself
+log("Database connection URL is set");
+
+// Create connection pool with specific SSL and connection settings
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  connectionTimeoutMillis: 5000, // 5 second timeout
+  max: 20 // Maximum number of clients in the pool
+});
 
 // Test the database connection
 export async function testConnection() {
