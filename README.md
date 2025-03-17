@@ -77,10 +77,10 @@ git push -u origin main
 3. Once created, click on your PostgreSQL service
 4. Click "Connect" and copy the "Postgres Connection URL"
 5. In your main service's "Variables" tab, add:
-   ```
-   DATABASE_URL=<paste the copied PostgreSQL URL>
-   ```
-   Important: Make sure to use the external connection URL from the "Connect" tab, not the internal hostname.
+```
+DATABASE_URL=<paste the copied PostgreSQL URL>
+```
+  Important: Make sure to use the external connection URL from the "Connect" tab, not the internal hostname.
 
 6. The application will automatically:
    - Use SSL in production
@@ -113,7 +113,8 @@ The application will use this URL to connect to your database automatically.
 1. Railway will automatically detect your Node.js application
 2. The deployment will start automatically when you push changes to your GitHub repository
 3. Railway will use the scripts defined in `package.json` and `nixpacks.toml` to build and start your application
-4. Once deployed, you can access your application via the URL provided by Railway
+4. The server listens on '0.0.0.0' (all network interfaces) as required by Railway
+5. Once deployed, you can access your application via the URL provided by Railway
 
 ### 5. Database Migrations
 
