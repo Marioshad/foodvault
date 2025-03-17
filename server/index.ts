@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { db } from "./db";
+import { getDatabaseConnection } from "./db";
 import { users } from "@shared/schema";
 
 const app = express();
@@ -60,6 +60,10 @@ app.use((req, res, next) => {
     if (missingEnvVars.length > 0) {
       throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
     }
+
+    // Initialize database connection with retries
+    console.log("Initializing database connection...");
+    const { db } = await getDatabaseConnection();
 
     // Test database connection
     try {

@@ -10,10 +10,9 @@ import {
   foodItems,
 } from "@shared/schema";
 import session from "express-session";
-import { db } from "./db";
+import { getDatabaseConnection } from "./db";
 import { eq } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
-import { pool } from "./db";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -42,21 +41,30 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
+  private dbPromise: Promise<{ db: any, pool: any }>;
 
   constructor() {
+    this.dbPromise = getDatabaseConnection();
     this.sessionStore = new PostgresSessionStore({
-      pool,
+      pool: this.dbPromise.then(({ pool }) => pool),
       createTableIfMissing: true,
     });
   }
 
+  private async getDb() {
+    const { db } = await this.dbPromise;
+    return db;
+  }
+
   // User operations
   async getUser(id: number): Promise<User | undefined> {
+    const db = await this.getDb();
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    const db = await this.getDb();
     const [user] = await db
       .select()
       .from(users)
@@ -65,12 +73,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
+    const db = await this.getDb();
     const [newUser] = await db.insert(users).values(user).returning();
     return newUser;
   }
 
   // Location operations
   async getLocations(userId: number): Promise<Location[]> {
+    const db = await this.getDb();
     return await db
       .select()
       .from(locations)
@@ -78,6 +88,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getLocation(id: number): Promise<Location | undefined> {
+    const db = await this.getDb();
     const [location] = await db
       .select()
       .from(locations)
@@ -88,6 +99,7 @@ export class DatabaseStorage implements IStorage {
   async createLocation(
     location: InsertLocation & { userId: number },
   ): Promise<Location> {
+    const db = await this.getDb();
     const [newLocation] = await db
       .insert(locations)
       .values(location)
@@ -99,6 +111,7 @@ export class DatabaseStorage implements IStorage {
     id: number,
     location: Partial<InsertLocation>,
   ): Promise<Location> {
+    const db = await this.getDb();
     const [updatedLocation] = await db
       .update(locations)
       .set(location)
@@ -108,11 +121,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteLocation(id: number): Promise<void> {
+    const db = await this.getDb();
     await db.delete(locations).where(eq(locations.id, id));
   }
 
   // Food item operations
   async getFoodItems(userId: number): Promise<FoodItem[]> {
+    const db = await this.getDb();
     return await db
       .select()
       .from(foodItems)
@@ -120,6 +135,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFoodItem(id: number): Promise<FoodItem | undefined> {
+    const db = await this.getDb();
     const [item] = await db
       .select()
       .from(foodItems)
@@ -130,6 +146,7 @@ export class DatabaseStorage implements IStorage {
   async createFoodItem(
     item: InsertFoodItem & { userId: number },
   ): Promise<FoodItem> {
+    const db = await this.getDb();
     const purchased = new Date();
     const [newItem] = await db
       .insert(foodItems)
@@ -146,6 +163,7 @@ export class DatabaseStorage implements IStorage {
     id: number,
     item: Partial<InsertFoodItem>,
   ): Promise<FoodItem> {
+    const db = await this.getDb();
     const [updatedItem] = await db
       .update(foodItems)
       .set({
@@ -158,6 +176,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteFoodItem(id: number): Promise<void> {
+    const db = await this.getDb();
     await db.delete(foodItems).where(eq(foodItems.id, id));
   }
 }
