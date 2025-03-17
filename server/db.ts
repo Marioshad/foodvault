@@ -11,5 +11,16 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Create pool with error handling
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+// Test the connection and log status
+pool.query('SELECT NOW()')
+  .then(() => console.log("Successfully connected to database"))
+  .catch(error => {
+    console.error("Failed to connect to database:", error);
+    throw error;
+  });
+
+export { pool };
 export const db = drizzle(pool, { schema });

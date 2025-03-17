@@ -5,7 +5,11 @@ nixPkgs = ["nodejs", "postgresql"]
 cmds = ["npm install"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "npm run build",
+  "esbuild server/index.ts --platform=node --packages=external --bundle --format=cjs --outdir=dist",
+  "chmod +x dist/index.js"
+]
 
 [start]
-cmd = "NODE_ENV=production npm run start"
+cmd = "NODE_ENV=production node dist/index.js"
