@@ -1,13 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs"]
+nixPkgs = ["nodejs", "postgresql"]
 
 [phases.install]
-cmds = ["cd backend && npm install"]
+cmds = ["npm install"]
 
 [phases.build]
-cmds = [
-  "esbuild backend/src/index.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.js"
-]
+cmds = ["npm run build"]
 
 [start]
-cmd = "NODE_ENV=production node dist/index.js"
+cmd = "NODE_ENV=production npm run start"
