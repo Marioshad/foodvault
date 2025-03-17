@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { db } from "./db";
+import { db, testConnection } from "./db";
 import { users } from "@shared/schema";
 
 const app = express();
@@ -40,9 +40,13 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Test database connection
+    // Test database connection first
+    await testConnection();
+    log("Initial database connection successful");
+
+    // Test query
     await db.select().from(users).limit(1);
-    log("Database connection successful");
+    log("Database query test successful");
 
     const server = await registerRoutes(app);
 

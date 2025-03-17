@@ -5,7 +5,11 @@ nixPkgs = ["nodejs", "postgresql"]
 cmds = ["npm install"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "npm run build",
+  "mkdir -p server/public",
+  "cp -r dist/* server/public/"
+]
 
 [start]
 cmd = "NODE_ENV=production npm run start"

@@ -92,7 +92,7 @@ The `DATABASE_URL` will be automatically set by Railway when you created the dat
 
 1. Railway will automatically detect your Node.js application
 2. The deployment will start automatically when you push changes to your GitHub repository
-3. Railway will use the scripts defined in `package.json` to build and start your application
+3. Railway will use the scripts defined in `package.json` and `nixpacks.toml` to build and start your application
 4. Once deployed, you can access your application via the URL provided by Railway
 
 ### 5. Database Migrations
@@ -112,6 +112,26 @@ The application uses Drizzle ORM for database management. Railway will automatic
 2. Ensure all environment variables are properly set
 3. Check if the database connection is working
 4. Verify that the OpenAI API key is valid and has proper permissions
+
+### Common Deployment Issues
+
+1. Missing Build Directory:
+   If you see an error about missing server/public directory, make sure:
+   - Your local build works with `npm run build`
+   - The nixpacks.toml file is properly committed to your repository
+   - Railway has permissions to create directories during build
+
+2. Database Connection Issues:
+   - Verify DATABASE_URL is set in Railway's Variables tab
+   - Check that the database is provisioned in Railway
+   - Look for database connection errors in the deployment logs
+
+3. Environment Variables:
+   - DATABASE_URL (automatically set by Railway)
+   - OPENAI_API_KEY (set this manually)
+   - SESSION_SECRET (set this manually)
+   - NODE_ENV (set to "production" in nixpacks.toml)
+
 
 ## Development Guidelines
 
