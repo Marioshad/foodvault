@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["nodejs"]
+
+[phases.install]
+cmds = ["cd frontend && npm install"]
+
+[phases.build]
+cmds = [
+  "cd frontend && vite build"
+]
+
+[start]
+cmd = """
+cd frontend && \
+npm install -g sirv-cli && \
+sirv dist --single --host 0.0.0.0 --port $PORT
+"""

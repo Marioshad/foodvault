@@ -2,11 +2,11 @@
 nixPkgs = ["nodejs"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["cd backend && npm install"]
 
 [phases.build]
 cmds = [
-  "esbuild server/index.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.js"
+  "esbuild backend/src/index.ts --platform=node --packages=external --bundle --format=cjs --outfile=dist/index.js"
 ]
 
 [start]
