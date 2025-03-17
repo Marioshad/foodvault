@@ -1,8 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { getDatabaseConnection } from "./db";
-import { users } from "@shared/schema";
+import { getDatabaseConnection } from "./config/database";
+import { users } from "../../shared/types/schema";
 import cors from "cors";
+import session from "express-session";
+import passport from "passport";
+import { storage } from "./storage";
+import { setupRoutes } from "./routes";
 
 const app = express();
 app.use(express.json());
@@ -75,7 +78,25 @@ app.use((req, res, next) => {
       throw dbError;
     }
 
-    const server = await registerRoutes(app);
+    // Session configuration
+    app.use(session({
+      secret: process.env.SESSION_SECRET!,
+      resave: false,
+      saveUninitialized: false,
+      store: storage.sessionStore,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    }));
+
+    // Initialize passport
+    app.use(passport.initialize());
+    app.use(passport.session());
+
+    // Setup routes
+    setupRoutes(app);
 
     // Enhanced error handling
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -95,7 +116,7 @@ app.use((req, res, next) => {
     });
 
     const port = process.env.PORT || 5000;
-    server.listen({
+    app.listen({
       port,
       host: "0.0.0.0",
     }, () => {

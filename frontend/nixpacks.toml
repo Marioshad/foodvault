@@ -10,6 +10,7 @@ cmds = [
 ]
 
 [start]
+# Use sirv for production-ready static file serving with SPA support
 cmd = """
 cd frontend && \
 npm install -g sirv-cli && \
