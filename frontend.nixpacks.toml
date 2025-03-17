@@ -2,12 +2,17 @@
 nixPkgs = ["nodejs"]
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["cd client && npm install"]
 
 [phases.build]
 cmds = [
-  "vite build"
+  "cd client && vite build"
 ]
 
 [start]
-cmd = "NODE_ENV=production npm run preview"
+# Use sirv for production-ready static file serving with SPA support
+cmd = """
+cd client && \
+npm install -g sirv-cli && \
+sirv dist --single --host 0.0.0.0 --port $PORT
+"""
