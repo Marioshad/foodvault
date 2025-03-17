@@ -49,27 +49,39 @@ app.use((req, res, next) => {
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
+      const stack = process.env.NODE_ENV === 'development' ? err.stack : undefined;
 
-      log(`Error: ${err.message}`);
-      res.status(status).json({ message });
+      // Enhanced error logging
+      log(`Error [${status}]: ${message}`);
+      if (stack) {
+        log(`Stack trace: ${stack}`);
+      }
+
+      res.status(status).json({ 
+        message,
+        ...(stack ? { stack } : {})
+      });
     });
 
-    if (app.get("env") === "development") {
+    if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
     } else {
       serveStatic(app);
     }
 
-    const port = 5000;
+    const port = process.env.PORT || 5000;
     server.listen({
       port,
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`serving on port ${port}`);
+      log(`Server listening on port ${port}`);
     });
-  } catch (error) {
-    log(`Failed to start server: ${error}`);
+  } catch (error: any) {
+    log(`Failed to start server: ${error.message}`);
+    if (error.stack) {
+      log(`Stack trace: ${error.stack}`);
+    }
     process.exit(1);
   }
 })();
